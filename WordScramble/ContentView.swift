@@ -25,14 +25,33 @@ struct ContentView: View {
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .padding()
                     .autocapitalization(.none)
-                List(usedWord, id: \.self) { word in
-                    HStack{
-                        Image(systemName: "\(word.count).circle")
-                        Text(word)
+                GeometryReader { fullView in
+                    ScrollView(.vertical, showsIndicators: false) {
+                        ForEach(0..<usedWord.count, id: \.self) { index in
+                            GeometryReader { geo in
+                                HStack {
+                                    Image(systemName: "\(usedWord[index].count).circle")
+                                        .foregroundColor(Color.init(
+                                                            red: Double(index) / Double(usedWord.count),
+                                                            green: Double(index) / Double(usedWord.count),
+                                                            blue: Double(index) / Double(usedWord.count)
+                                        ))
+                                    Text(usedWord[index])
+                                    Spacer()
+                                }
+                                .font(.title)
+                                .frame(width: fullView.size.width)
+                                .padding()
+//                                .offset(x: geo.frame(in: .global).minY > 500 ?
+//                                            CGFloat(index * 10) : 5
+//                                )
+                            }
+                            .frame(height: 30)
+                        }
+                        if rootScore != 0 {
+                            Text("Your score: \(rootScore)")
+                        }
                     }
-                }
-                if rootScore != 0 {
-                    Text("Your score: \(rootScore)")
                 }
             }
             .toolbar(content: {
@@ -84,6 +103,13 @@ struct ContentView: View {
             if let startWords = try? String(contentsOf: startWordsURL) {
                 let allWords = startWords.components(separatedBy: "\n")
                 rootWord = allWords.randomElement() ?? "silkworm"
+                for _ in 0..<20 {
+                    guard let word = allWords.randomElement() else { continue }
+                    usedWord.append(word)
+                    if usedWord.count > 20 {
+                        break
+                    }
+                }
                 return
             }
         }
@@ -107,7 +133,7 @@ struct ContentView: View {
     }
     
     func isReal(word: String) -> Bool {
-        if rootWord.elementsEqual(word) || word.utf16.count <= 3 {
+        if rootWord.elementsEqual(word) || word.utf16.count <= 1 {
             return false
         }
         
